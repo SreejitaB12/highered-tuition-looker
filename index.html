@@ -413,7 +413,45 @@ tbody tr:hover td{background:var(--kap-purple-xpale)}
 .footer-disclaimer{font-size:11px;color:rgba(255,255,255,0.3);max-width:500px;line-height:1.5}
 .footer-chart-accent{display:inline-block;width:8px;height:8px;background:var(--kap-chart);border-radius:2px;margin-right:5px}
 
-@media(max-width:640px){
+/* ══════════════════════════════════════
+   SETUP BANNER
+══════════════════════════════════════ */
+.setup-banner{
+  background:#fff;border-bottom:3px solid var(--kap-chart);
+  padding:0;display:none;
+}
+.setup-banner-inner{
+  max-width:1000px;margin:0 auto;
+  padding:1.4rem 2rem;
+  display:flex;gap:1.2rem;align-items:flex-start;flex-wrap:wrap;
+}
+.setup-icon{
+  width:40px;height:40px;background:var(--kap-purple);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;
+}
+.setup-icon svg{width:20px;height:20px;fill:none;stroke:white;stroke-width:1.8}
+.setup-text{flex:1;min-width:200px}
+.setup-text h3{font-size:14px;font-weight:600;color:var(--kap-purple);margin-bottom:3px}
+.setup-text p{font-size:13px;color:var(--ink-3);line-height:1.6;margin-bottom:10px}
+.setup-input-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.setup-input{
+  flex:1;min-width:280px;padding:9px 12px;
+  font-family:'DM Sans',sans-serif;font-size:13px;
+  color:var(--kap-dark);background:var(--kap-xpale);
+  border:1.5px solid var(--kap-light);border-radius:var(--radius);outline:none;
+}
+.setup-input:focus{border-color:var(--kap-purple);background:white}
+.setup-save-btn{
+  padding:9px 18px;background:var(--kap-purple);color:white;
+  border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;
+  font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;
+  transition:background .14s;
+}
+.setup-save-btn:hover{background:var(--kap-purple-light)}
+.setup-steps{margin-top:10px;display:flex;gap:1.5rem;flex-wrap:wrap}
+.setup-step{font-size:12px;color:var(--ink-3);display:flex;align-items:flex-start;gap:5px;line-height:1.5;max-width:180px}
+.setup-step-num{width:18px;height:18px;background:var(--kap-purple-pale);color:var(--kap-purple);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;margin-top:1px}
+
   .tuition-grid{grid-template-columns:1fr}
   .tuition-cell:nth-child(odd){border-right:none}
   .search-grid{grid-template-columns:1fr}
@@ -443,9 +481,36 @@ tbody tr:hover td{background:var(--kap-purple-xpale)}
     <a class="nav-link" href="#how-it-works">How it works</a>
     <a class="nav-link" href="#features">Features</a>
     <a class="nav-link" href="#faq">FAQ</a>
+    <a class="nav-link" href="#" onclick="document.getElementById('setup-banner').style.display='block';window.scrollTo({top:0,behavior:'smooth'});return false;" style="display:flex;align-items:center;gap:5px">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="2.5"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M3.05 12.95l1.06-1.06M11.89 4.11l1.06-1.06"/></svg>
+      Setup
+    </a>
     <a class="nav-cta" href="#tool">Use the Tool</a>
   </div>
 </nav>
+
+<!-- ═══ SETUP BANNER ═══ -->
+<div class="setup-banner" id="setup-banner">
+  <div class="setup-banner-inner">
+    <div class="setup-icon">
+      <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="3"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.22 4.22l1.42 1.42M14.36 14.36l1.42 1.42M4.22 15.78l1.42-1.42M14.36 5.64l1.42-1.42"/></svg>
+    </div>
+    <div class="setup-text">
+      <h3>One-time setup required — connect your Cloudflare Worker proxy</h3>
+      <p>To run on a public website, the tool needs a free Cloudflare Worker as a secure proxy. Deploy <code style="background:var(--kap-purple-pale);color:var(--kap-purple);padding:1px 5px;border-radius:3px;font-size:12px">cloudflare-worker.js</code> to Cloudflare, then paste your Worker URL below. Your API key stays secret on Cloudflare's servers — never in the browser.</p>
+      <div class="setup-input-row">
+        <input class="setup-input" id="proxy-url-input" type="url" placeholder="https://your-worker.your-subdomain.workers.dev" autocomplete="off"/>
+        <button class="setup-save-btn" onclick="saveProxyUrl(document.getElementById('proxy-url-input').value)">Save & Activate</button>
+      </div>
+      <div class="setup-steps">
+        <div class="setup-step"><div class="setup-step-num">1</div><span>Go to <strong>workers.cloudflare.com</strong> and create a free account</span></div>
+        <div class="setup-step"><div class="setup-step-num">2</div><span>Create a new Worker and paste the code from <strong>cloudflare-worker.js</strong></span></div>
+        <div class="setup-step"><div class="setup-step-num">3</div><span>Add a secret variable <strong>ANTHROPIC_API_KEY</strong> with your Anthropic key</span></div>
+        <div class="setup-step"><div class="setup-step-num">4</div><span>Copy your Worker URL (e.g. <em>your-worker.workers.dev</em>) and paste it above</span></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ═══ HERO ═══ -->
 <section class="hero">
@@ -1020,10 +1085,41 @@ function toggleEvidence(){
 }
 
 // ═══════════════════════════════════════════════
-// AI CALL
+// PROXY CONFIG
+// Replace the URL below with your Cloudflare Worker URL
+// after deploying cloudflare-worker.js
+// ═══════════════════════════════════════════════
+const PROXY_URL = (
+  localStorage.getItem('higherEdProxyUrl') ||
+  'https://YOUR_WORKER.YOUR_SUBDOMAIN.workers.dev'
+);
+
+function getProxyUrl() {
+  return localStorage.getItem('higherEdProxyUrl') || '';
+}
+
+function saveProxyUrl(url) {
+  localStorage.setItem('higherEdProxyUrl', url.trim().replace(/\/$/, ''));
+  document.getElementById('setup-banner').style.display = 'none';
+  document.getElementById('proxy-url-input').value = url.trim();
+}
+
+function showSetupBanner() {
+  const saved = localStorage.getItem('higherEdProxyUrl');
+  if (!saved || saved.includes('YOUR_WORKER')) {
+    document.getElementById('setup-banner').style.display = 'block';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// AI CALL  (routes through Cloudflare Worker proxy)
 // ═══════════════════════════════════════════════
 async function callAI(systemPrompt,userMsg,maxTokens=2000){
-  const res=await fetch('https://api.anthropic.com/v1/messages',{
+  const proxy = getProxyUrl();
+  if (!proxy || proxy.includes('YOUR_WORKER')) {
+    throw new Error('Proxy not configured. Please enter your Cloudflare Worker URL in the setup panel above.');
+  }
+  const res=await fetch(proxy,{
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,system:systemPrompt,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:userMsg}]})
   });
@@ -1035,9 +1131,13 @@ async function callAI(systemPrompt,userMsg,maxTokens=2000){
   return JSON.parse(match[0]);
 }
 async function scrapeURL(url,university,program,level){
+  const proxy = getProxyUrl();
+  if (!proxy || proxy.includes('YOUR_WORKER')) {
+    throw new Error('Proxy not configured. Please enter your Cloudflare Worker URL in the setup panel above.');
+  }
   const isPDF=url.toLowerCase().includes('.pdf');
   const msg=`University: "${university}"\nProgram: "${program||'general/all programs'}"\nLevel: "${level||'any'}"\n\nPlease fetch and read this ${isPDF?'PDF':'page'}: ${url}\n\nExtract tuition data. If no explicit dollar amounts, return data_found:false. Do not estimate.`;
-  const res=await fetch('https://api.anthropic.com/v1/messages',{
+  const res=await fetch(proxy,{
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:SCRAPE_PROMPT,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:msg}]})
   });
@@ -1057,6 +1157,9 @@ async function scrapeURL(url,university,program,level){
 // ═══════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('uni-input').addEventListener('keydown',e=>{if(e.key==='Enter')lookupSingle()});
+  showSetupBanner();
+  const saved = localStorage.getItem('higherEdProxyUrl');
+  if (saved) document.getElementById('proxy-url-input').value = saved;
 });
 
 async function lookupSingle(){
@@ -1205,11 +1308,13 @@ function renderSingleResult(r,prog,level){
 // BULK
 // ═══════════════════════════════════════════════
 async function callAI_bulk(universityName,program,level){
+  const proxy = getProxyUrl();
+  if (!proxy || proxy.includes('YOUR_WORKER')) throw new Error('Proxy not configured.');
   const msg=`Look up current in-state and out-of-state tuition for: ${universityName}${program?' — program: '+program:''}${level?' — level: '+level:''}. Search ONLY on the university's official .edu website. Return the JSON as specified.`;
   const BULK_SYSTEM=`You are a university tuition research assistant. Find current tuition from official .edu websites only. Return ONLY valid JSON:
 {"university_name":"string","location":"string","academic_year":"string","program_name":"string|null","in_state_tuition":number|null,"out_of_state_tuition":number|null,"fees":number|null,"room_board":number|null,"tuition_type":"string","total_credits_required":number|null,"notes":"string","confidence":0.0-1.0,"confidence_reason":"string","sources":[{"title":"string","url":"string","description":"string"}],"data_found":true}
 If not found: {"university_name":"string","data_found":false,"reason":"string"}`;
-  const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:BULK_SYSTEM,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:msg}]})});
+  const res=await fetch(proxy,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:BULK_SYSTEM,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:msg}]})});
   const data=await res.json();
   if(data.error)throw new Error(data.error.message);
   const raw=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').replace(/```json|```/g,'').trim();
