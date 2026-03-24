@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HigherEd Tuition Looker — US University Tuition, Instantly</title>
+<meta name="description" content="Look up in-state and out-of-state tuition for any US university in seconds. AI-powered, sourced exclusively from official .edu websites. No guessing. No third-party data.">
+<meta property="og:title" content="HigherEd Tuition Looker">
+<meta property="og:description" content="AI-powered US university tuition lookup. Official sources only. Program-specific. Downloadable Excel reports.">
+<meta property="og:type" content="website">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --kap-purple:#240F6E;
+  --kap-purple-deep:#250E62;
+  --kap-purple-light:#3a1f8f;
+  --kap-purple-pale:#ede9f8;
+  --kap-purple-xpale:#f6f4fc;
+  --kap-blue:#005DE8;
+  --kap-blue-deep:#082ECF;
+  --kap-blue-pale:#e0eafd;
+  --kap-chart:#C1D82F;
+  --kap-chart-deep:#8BA616;
+  --kap-chart-pale:#f2f7c4;
+  --kap-dark:#222121;
+  --kap-mid:#837870;
+  --kap-cool:#B4B4B4;
+  --kap-light:#E0E0E0;
+  --kap-xlight:#F9F9F9;
+  --kap-red:#D6083B;
+  --kap-red-pale:#fce8ee;
+  --kap-orange:#E55302;
+  --kap-orange-pale:#fdeee5;
+  --kap-green:#2B8623;
+  --kap-green-pale:#e6f4e5;
+  --ink:#222121;--ink-2:#4a4744;--ink-3:#837870;
+  --paper:var(--kap-xpale);--paper-2:#ece8f6;--paper-3:#dcd7ef;
+  --navy:var(--kap-purple);--navy-2:var(--kap-purple-light);
+  --teal:var(--kap-green);--teal-pale:var(--kap-green-pale);--teal-2:#3aaa37;
+  --red:var(--kap-red);--red-pale:var(--kap-red-pale);
+  --green:var(--kap-green);--green-pale:var(--kap-green-pale);
+  --amber:var(--kap-orange);--amber-pale:var(--kap-orange-pale);
+  --blue:var(--kap-blue);--blue-pale:var(--kap-blue-pale);
+  --gold:var(--kap-chart-deep);--gold-light:var(--kap-chart);--gold-pale:var(--kap-chart-pale);
+  --radius:10px;--radius-lg:16px;
+  --shadow:0 1px 3px rgba(36,15,110,0.08),0 4px 14px rgba(36,15,110,0.07);
+  --shadow-lg:0 4px 24px rgba(36,15,110,0.14);
+}
+
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:#fff;color:var(--kap-dark);line-height:1.6}
+
+/* ══════════════════════════════════════
+   NAV
+══════════════════════════════════════ */
+.site-nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(255,255,255,0.96);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--kap-light);
+  padding:0 2rem;
+  display:flex;align-items:center;justify-content:space-between;
+  height:60px;
+}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo-mark{
+  width:34px;height:34px;background:var(--kap-purple);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.nav-logo-mark svg{width:18px;height:18px;fill:none;stroke:white;stroke-width:1.8}
+.nav-logo-text{font-family:'DM Serif Display',serif;font-size:18px;color:var(--kap-purple);letter-spacing:-0.01em}
+.nav-logo-sub{font-size:11px;color:var(--kap-mid);font-weight:400;margin-top:-2px}
+.nav-links{display:flex;align-items:center;gap:6px}
+.nav-link{font-size:13px;color:var(--ink-3);text-decoration:none;padding:7px 12px;border-radius:var(--radius);transition:background .14s,color .14s}
+.nav-link:hover{color:var(--kap-purple);background:var(--kap-purple-pale)}
+.nav-cta{font-size:13px;font-weight:500;background:var(--kap-purple);color:white;padding:8px 16px;border-radius:var(--radius);text-decoration:none;transition:background .14s}
+.nav-cta:hover{background:var(--kap-purple-light)}
+
+/* ══════════════════════════════════════
+   HERO
+══════════════════════════════════════ */
+.hero{
+  background:var(--kap-purple);
+  padding:5rem 2rem 4rem;
+  position:relative;overflow:hidden;
+  text-align:center;
+}
+.hero::before{
+  content:'';position:absolute;top:-80px;right:-100px;
+  width:400px;height:400px;border-radius:50%;
+  background:rgba(193,216,47,0.1);pointer-events:none;
+}
+.hero::after{
+  content:'';position:absolute;bottom:-60px;left:-80px;
+  width:300px;height:300px;border-radius:50%;
+  background:rgba(0,93,232,0.12);pointer-events:none;
+}
+.hero-inner{position:relative;z-index:1;max-width:720px;margin:0 auto}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(193,216,47,0.18);
+  border:1px solid rgba(193,216,47,0.4);
+  color:var(--kap-chart);font-size:12px;font-weight:500;
+  padding:5px 14px;border-radius:20px;margin-bottom:1.6rem;
+  letter-spacing:0.04em;
+}
+.hero-badge-dot{width:6px;height:6px;background:var(--kap-chart);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(0.85)}}
+.hero h1{
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(2.2rem,5vw,3.4rem);font-weight:400;
+  color:white;line-height:1.15;margin-bottom:1.2rem;letter-spacing:-0.01em;
+}
+.hero h1 em{color:var(--kap-chart);font-style:normal}
+.hero-sub{font-size:1.05rem;color:rgba(255,255,255,0.65);max-width:540px;margin:0 auto 2rem;line-height:1.7}
+.hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:2.5rem}
+.btn-hero{
+  padding:13px 28px;background:var(--kap-chart);color:var(--kap-purple-deep);
+  border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;
+  font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;
+  display:inline-flex;align-items:center;gap:7px;
+  transition:opacity .14s,transform .1s;
+}
+.btn-hero:hover{opacity:.88}
+.btn-hero:active{transform:scale(0.98)}
+.btn-hero-outline{
+  padding:13px 28px;background:rgba(255,255,255,0.1);color:white;
+  border:1.5px solid rgba(255,255,255,0.3);border-radius:var(--radius);
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;
+  cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:7px;
+  transition:background .14s;
+}
+.btn-hero-outline:hover{background:rgba(255,255,255,0.18)}
+.hero-stats{
+  display:flex;justify-content:center;gap:2.5rem;flex-wrap:wrap;
+  padding-top:2rem;border-top:1px solid rgba(255,255,255,0.12);
+}
+.hero-stat-num{font-family:'DM Serif Display',serif;font-size:1.9rem;color:white;line-height:1}
+.hero-stat-label{font-size:12px;color:rgba(255,255,255,0.5);margin-top:3px}
+
+/* ══════════════════════════════════════
+   TRUST STRIP
+══════════════════════════════════════ */
+.trust-strip{
+  background:var(--kap-purple-pale);
+  border-bottom:1px solid var(--kap-purple-pale);
+  padding:1rem 2rem;display:flex;align-items:center;
+  justify-content:center;gap:2rem;flex-wrap:wrap;
+}
+.trust-item{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--kap-purple);font-weight:500}
+.trust-item svg{width:15px;height:15px;flex-shrink:0;stroke:var(--kap-purple);fill:none;stroke-width:1.8}
+.trust-sep{width:1px;height:16px;background:var(--kap-purple-pale);opacity:.5}
+
+/* ══════════════════════════════════════
+   HOW IT WORKS
+══════════════════════════════════════ */
+.section{padding:4rem 2rem;max-width:1000px;margin:0 auto}
+.section-label{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--kap-purple);margin-bottom:10px}
+.section-title{font-family:'DM Serif Display',serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:400;color:var(--kap-dark);margin-bottom:.6rem;line-height:1.2}
+.section-sub{font-size:15px;color:var(--ink-3);max-width:560px;line-height:1.7}
+.steps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;margin-top:2.5rem}
+.step-card{background:var(--kap-purple-xpale);border:1px solid var(--kap-purple-pale);border-radius:var(--radius-lg);padding:1.5rem}
+.step-num{width:32px;height:32px;background:var(--kap-purple);color:white;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;margin-bottom:12px;font-family:'DM Serif Display',serif}
+.step-card h3{font-size:14px;font-weight:500;color:var(--kap-dark);margin-bottom:6px}
+.step-card p{font-size:13px;color:var(--ink-3);line-height:1.6}
+.step-accent{color:var(--kap-purple);font-weight:500}
+
+/* ══════════════════════════════════════
+   FEATURES
+══════════════════════════════════════ */
+.features-bg{background:var(--kap-purple-xpale);border-top:1px solid var(--kap-purple-pale);border-bottom:1px solid var(--kap-purple-pale)}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.2rem;margin-top:2.5rem}
+.feat-card{background:white;border:1px solid var(--kap-light);border-radius:var(--radius-lg);padding:1.4rem;box-shadow:var(--shadow)}
+.feat-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.feat-icon svg{width:18px;height:18px;fill:none;stroke:white;stroke-width:1.8}
+.feat-icon.purple{background:var(--kap-purple)}
+.feat-icon.blue{background:var(--kap-blue)}
+.feat-icon.chart{background:var(--kap-chart-deep)}
+.feat-icon.red{background:var(--kap-red)}
+.feat-icon.orange{background:var(--kap-orange)}
+.feat-icon.green{background:var(--kap-green)}
+.feat-card h3{font-size:14px;font-weight:500;color:var(--kap-dark);margin-bottom:5px}
+.feat-card p{font-size:13px;color:var(--ink-3);line-height:1.6}
+
+/* ══════════════════════════════════════
+   TOOL SECTION
+══════════════════════════════════════ */
+.tool-section{background:#fff;border-top:1px solid var(--kap-light)}
+.tool-intro{max-width:1000px;margin:0 auto;padding:3rem 2rem 1.5rem;display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.tool-intro-text .section-label{margin-bottom:8px}
+.tool-intro-text h2{font-family:'DM Serif Display',serif;font-size:1.8rem;font-weight:400;color:var(--kap-dark)}
+.tool-intro-text p{font-size:14px;color:var(--ink-3);margin-top:5px;max-width:500px}
+.tool-wrapper{
+  max-width:1000px;margin:0 auto;
+  padding:0 2rem 3rem;
+}
+
+/* ══════════════════════════════════════
+   TOOL EMBED (inner styles)
+══════════════════════════════════════ */
+.tool-embed{
+  border:1px solid var(--kap-light);border-radius:20px;
+  overflow:hidden;box-shadow:var(--shadow-lg);
+  background:var(--kap-xpale);
+}
+.tool-header{
+  background:var(--kap-purple);color:white;
+  padding:1.6rem 2rem 1.4rem;position:relative;overflow:hidden;
+}
+.tool-header::before{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:rgba(193,216,47,0.12);pointer-events:none}
+.tool-header::after{content:'';position:absolute;bottom:-30px;left:40%;width:130px;height:130px;border-radius:50%;background:rgba(0,93,232,0.1);pointer-events:none}
+.tool-header-inner{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.tool-header-badge{display:inline-block;background:rgba(193,216,47,0.2);color:var(--kap-chart);font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;padding:3px 10px;border-radius:20px;margin-bottom:6px;border:1px solid rgba(193,216,47,0.35)}
+.tool-header h2{font-family:'DM Serif Display',serif;font-size:22px;font-weight:400;color:#fff;margin-bottom:3px}
+.tool-header p{font-size:13px;color:rgba(255,255,255,0.6);max-width:500px;line-height:1.55}
+.tool-header-pills{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.tool-header-pill{font-size:11px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);color:rgba(255,255,255,0.65);padding:3px 9px;border-radius:20px;display:flex;align-items:center;gap:5px}
+.tool-header-pill svg{width:11px;height:11px;flex-shrink:0}
+
+/* TAB NAV */
+.tab-nav{display:flex;background:var(--kap-purple-pale);border-bottom:2px solid var(--kap-purple)}
+.tab-btn{padding:11px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--kap-mid);background:none;border:none;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s;display:flex;align-items:center;gap:6px}
+.tab-btn.active{color:var(--kap-purple);border-bottom-color:var(--kap-purple)}
+.tab-btn:hover:not(.active){color:var(--kap-purple-light)}
+.tab-icon{width:15px;height:15px;flex-shrink:0}
+.tab-panel{display:none;padding:1.5rem}
+.tab-panel.active{display:block}
+
+/* FORM */
+.search-card{background:white;border:1px solid var(--kap-light);border-radius:var(--radius-lg);padding:1.4rem;box-shadow:var(--shadow);margin-bottom:1.2rem}
+.field-label{display:block;font-size:11px;font-weight:500;color:var(--kap-mid);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:7px}
+.search-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.field-group{display:flex;flex-direction:column}
+input[type="text"],select{padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--kap-dark);background:var(--kap-xpale);border:1.5px solid var(--kap-light);border-radius:var(--radius);outline:none;transition:border-color .15s;width:100%}
+input[type="text"]:focus,select:focus{border-color:var(--kap-purple);background:white;box-shadow:0 0 0 3px rgba(36,15,110,0.08)}
+input[type="text"]::placeholder{color:var(--kap-cool)}
+select option{color:var(--kap-dark)}
+.search-row{display:flex;gap:8px;align-items:center;margin-top:4px}
+.btn-primary{padding:11px 20px;background:var(--kap-purple);color:white;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background .14s,transform .1s;white-space:nowrap;flex-shrink:0}
+.btn-primary:hover{background:var(--kap-purple-light)}
+.btn-primary:active{transform:scale(0.98)}
+.btn-primary:disabled{background:var(--kap-cool);cursor:not-allowed}
+.btn-secondary{padding:10px 16px;background:white;color:var(--kap-purple);border:1.5px solid var(--kap-light);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:border-color .14s,background .14s;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.btn-secondary:hover{border-color:var(--kap-purple);background:var(--kap-purple-xpale)}
+.btn-secondary:disabled{opacity:0.5;cursor:not-allowed}
+.btn-download{padding:10px 18px;background:var(--kap-purple);color:white;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .14s;display:flex;align-items:center;gap:6px}
+.btn-download:hover{background:var(--kap-purple-light)}
+.hint{font-size:12px;color:var(--kap-mid);margin-top:8px;line-height:1.6}
+.examples{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.example-chip{font-size:11px;background:var(--kap-xpale);color:var(--kap-purple);border:1px solid var(--kap-light);border-radius:20px;padding:3px 11px;cursor:pointer;transition:background .12s,border-color .12s}
+.example-chip:hover{background:var(--kap-purple-pale);border-color:var(--kap-purple)}
+
+/* PIPELINE */
+.pipeline-card{background:white;border:1px solid var(--kap-light);border-radius:var(--radius-lg);padding:1.2rem 1.4rem;box-shadow:var(--shadow);margin-bottom:1.2rem;display:none}
+.pipeline-card.visible{display:block}
+.pipeline-title{font-size:12px;font-weight:500;color:var(--kap-mid);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:12px}
+.steps-list{display:flex;flex-direction:column;gap:8px}
+.step-row{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:var(--radius);border:1px solid transparent;transition:background .2s,border-color .2s}
+.step-row.step-active{background:var(--kap-blue-pale);border-color:rgba(0,93,232,0.2)}
+.step-row.step-done{background:var(--kap-purple-pale);border-color:rgba(36,15,110,0.15)}
+.step-row.step-error{background:var(--kap-red-pale);border-color:rgba(214,8,59,0.18)}
+.step-row.step-skip{opacity:0.45}
+.step-icon{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;margin-top:1px}
+.step-icon.idle{background:var(--kap-light);color:var(--kap-mid)}
+.step-icon.active{background:var(--kap-blue);color:white}
+.step-icon.done{background:var(--kap-purple);color:white}
+.step-icon.error{background:var(--kap-red);color:white}
+.step-icon.skip{background:var(--kap-light);color:var(--kap-mid)}
+.step-text{flex:1}
+.step-label{font-size:13px;font-weight:500;color:var(--kap-dark)}
+.step-row.step-active .step-label{color:var(--kap-blue-deep)}
+.step-row.step-done .step-label{color:var(--kap-purple)}
+.step-detail{font-size:11px;color:var(--kap-mid);margin-top:2px;line-height:1.5;word-break:break-all}
+.spin-sm{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* EVIDENCE */
+.evidence-card{background:white;border:1px solid var(--kap-light);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);margin-bottom:1.2rem;display:none}
+.evidence-card.visible{display:block}
+.evidence-header{padding:10px 14px;border-bottom:1px solid var(--kap-light);background:var(--kap-xpale);cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none}
+.evidence-header h4{font-size:12px;font-weight:500;color:var(--kap-mid);text-transform:uppercase;letter-spacing:0.07em}
+.evidence-toggle{font-size:11px;color:var(--kap-purple)}
+.evidence-body{padding:12px 14px;max-height:200px;overflow-y:auto;display:none}
+.evidence-body.open{display:block}
+.ev-item{font-size:11px;color:var(--kap-dark);padding:5px 0;border-bottom:1px solid var(--kap-light);line-height:1.6}
+.ev-item:last-child{border-bottom:none}
+.ev-type{display:inline-block;font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;margin-right:5px;text-transform:uppercase;letter-spacing:.04em}
+.ev-search{background:var(--kap-blue-pale);color:var(--kap-blue-deep)}
+.ev-scrape{background:var(--kap-purple-pale);color:var(--kap-purple)}
+.ev-pdf{background:var(--kap-orange-pale);color:var(--kap-orange)}
+.ev-synth{background:var(--kap-chart-pale);color:var(--kap-chart-deep)}
+
+/* RESULT */
+.result-card{background:white;border:1px solid var(--kap-light);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);margin-bottom:1.2rem;display:none}
+.result-card.visible{display:block}
+.result-header{background:var(--kap-purple);color:white;padding:1.1rem 1.4rem;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.result-header h2{font-family:'DM Serif Display',serif;font-size:19px;font-weight:400;color:white}
+.result-sub{font-size:12px;color:rgba(255,255,255,0.55);margin-top:2px}
+.year-badge{background:rgba(193,216,47,0.25);color:var(--kap-chart);font-size:11px;padding:3px 9px;border-radius:20px;white-space:nowrap;align-self:flex-start;border:1px solid rgba(193,216,47,0.4)}
+.tuition-grid{display:grid;grid-template-columns:1fr 1fr}
+.tuition-cell{padding:1.2rem 1.4rem;border-bottom:1px solid var(--kap-light)}
+.tuition-cell:nth-child(odd){border-right:1px solid var(--kap-light)}
+.cell-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+.tuition-cell.in-state .cell-label{color:var(--kap-purple)}
+.tuition-cell.out-state .cell-label{color:var(--kap-blue-deep)}
+.tuition-cell.fees .cell-label{color:var(--kap-mid)}
+.amount{font-family:'DM Serif Display',serif;font-size:28px;line-height:1;margin-bottom:3px}
+.tuition-cell.in-state .amount{color:var(--kap-purple)}
+.tuition-cell.out-state .amount{color:var(--kap-blue-deep)}
+.per-year{font-size:11px;color:var(--kap-mid)}
+.program-note-bar{background:var(--kap-orange-pale);border-bottom:1px solid rgba(229,83,2,0.2);padding:10px 14px;font-size:12px;color:var(--kap-orange);display:flex;gap:7px;align-items:flex-start}
+.confidence-bar{display:flex;align-items:center;gap:10px;padding:.75rem 1.4rem;border-bottom:1px solid var(--kap-light);font-size:12px;color:var(--kap-mid)}
+.conf-label{font-weight:500;color:var(--kap-dark)}
+.conf-track{flex:1;height:3px;background:var(--kap-light);border-radius:2px;overflow:hidden}
+.conf-fill{height:100%;border-radius:2px;background:var(--kap-purple);transition:width .4s ease}
+.conf-pct{font-weight:500;min-width:28px;text-align:right}
+.info-section{padding:1rem 1.4rem;border-bottom:1px solid var(--kap-light);font-size:13px;color:var(--ink-2);line-height:1.7}
+.notes-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--kap-mid);margin-bottom:5px}
+.source-section{padding:1rem 1.4rem;background:var(--kap-xpale)}
+.src-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--kap-mid);margin-bottom:8px}
+.source-link{display:flex;align-items:flex-start;gap:7px;margin-bottom:8px}
+.src-icon{width:18px;height:18px;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.src-icon.web{background:var(--kap-purple)}
+.src-icon.pdf{background:var(--kap-red)}
+.src-icon svg{width:10px;height:10px;fill:white}
+.source-link a{font-size:12px;color:var(--kap-purple);text-decoration:none;word-break:break-all;line-height:1.5}
+.source-link a:hover{text-decoration:underline}
+.src-badge{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-left:6px;padding:1px 5px;border-radius:3px}
+.src-badge.pdf{background:var(--kap-red-pale);color:var(--kap-red)}
+.src-badge.html{background:var(--kap-purple-pale);color:var(--kap-purple)}
+.warning-banner{background:#fff9e6;border:1px solid rgba(193,216,47,0.5);border-radius:var(--radius);padding:9px 13px;font-size:12px;color:#5a4a00;margin:.9rem 1.4rem 0;display:flex;gap:7px;align-items:flex-start;line-height:1.5}
+.warn-icon{flex-shrink:0;font-size:14px}
+.error-card{background:var(--kap-red-pale);border:1px solid rgba(214,8,59,0.3);border-radius:var(--radius-lg);padding:1.2rem 1.4rem;display:none;margin-bottom:1.2rem}
+.error-card.visible{display:block}
+.error-card strong{color:var(--kap-red);font-size:13px}
+.error-card p{font-size:12px;color:var(--ink-2);margin-top:3px;line-height:1.6}
+
+/* BULK */
+.template-section{background:var(--kap-purple-pale);border:1px solid rgba(36,15,110,0.15);border-radius:var(--radius-lg);padding:1.2rem 1.4rem;margin-bottom:1.4rem}
+.template-section h4{font-size:13px;font-weight:500;color:var(--kap-purple);margin-bottom:6px}
+.template-section p{font-size:12px;color:var(--ink-2);line-height:1.6;margin-bottom:10px}
+.col-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.col-chip{font-size:11px;background:white;border:1px solid rgba(36,15,110,0.25);border-radius:4px;padding:3px 9px;color:var(--kap-purple);font-weight:500;font-family:monospace}
+.upload-zone{border:2px dashed var(--kap-light);border-radius:var(--radius-lg);padding:2.5rem 1.5rem;text-align:center;background:white;cursor:pointer;transition:border-color .15s,background .15s;margin-bottom:1.2rem}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--kap-purple);background:var(--kap-purple-xpale)}
+.upload-icon{font-size:34px;margin-bottom:10px}
+.upload-zone h3{font-size:15px;font-weight:500;color:var(--kap-dark);margin-bottom:5px}
+.upload-zone p{font-size:13px;color:var(--kap-mid)}
+.browse-link{color:var(--kap-purple);text-decoration:underline;cursor:pointer}
+#file-input{display:none}
+.preview-section{background:white;border:1px solid var(--kap-light);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);margin-bottom:1.4rem}
+.preview-header{padding:10px 14px;border-bottom:1px solid var(--kap-light);display:flex;align-items:center;justify-content:space-between}
+.preview-header h4{font-size:13px;font-weight:500;color:var(--kap-dark)}
+.preview-header span{font-size:12px;color:var(--kap-mid)}
+.preview-table-wrap{overflow-x:auto;max-height:280px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:var(--kap-purple);color:white;padding:8px 12px;text-align:left;font-weight:500;font-size:11px;letter-spacing:.04em;white-space:nowrap;position:sticky;top:0}
+tbody td{padding:8px 12px;border-bottom:1px solid var(--kap-light);color:var(--ink-2);white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--kap-purple-xpale)}
+.status-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
+.status-pending{background:var(--kap-light);color:var(--kap-mid)}
+.status-fetching{background:var(--kap-blue-pale);color:var(--kap-blue-deep)}
+.status-done{background:var(--kap-purple-pale);color:var(--kap-purple)}
+.status-error{background:var(--kap-red-pale);color:var(--kap-red)}
+.bulk-actions{display:flex;gap:10px;align-items:center;padding:1rem 0;flex-wrap:wrap}
+.progress-info{font-size:12px;color:var(--kap-mid);flex:1}
+.progress-bar-wrap{height:4px;background:var(--kap-light);border-radius:2px;margin-bottom:1.2rem;overflow:hidden}
+.progress-bar-fill{height:100%;background:var(--kap-purple);border-radius:2px;transition:width .3s ease}
+.results-section{background:white;border:1px solid var(--kap-light);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);margin-bottom:1.4rem}
+.results-header{padding:12px 14px;border-bottom:1px solid var(--kap-light);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.results-header h4{font-size:13px;font-weight:500;color:var(--kap-dark)}
+.in-state-val{color:var(--kap-purple);font-weight:500}
+.out-state-val{color:var(--kap-blue-deep);font-weight:500}
+
+/* ══════════════════════════════════════
+   FAQ
+══════════════════════════════════════ */
+.faq-list{margin-top:2rem;display:flex;flex-direction:column;gap:1px;border:1px solid var(--kap-light);border-radius:var(--radius-lg);overflow:hidden}
+.faq-item{background:white}
+.faq-q{width:100%;padding:1.1rem 1.4rem;display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:500;color:var(--kap-dark);background:none;border:none;cursor:pointer;text-align:left;border-bottom:1px solid var(--kap-light);transition:background .14s}
+.faq-q:hover{background:var(--kap-purple-xpale)}
+.faq-q.open{color:var(--kap-purple)}
+.faq-chevron{width:16px;height:16px;flex-shrink:0;stroke:var(--kap-mid);fill:none;stroke-width:2;transition:transform .2s}
+.faq-q.open .faq-chevron{transform:rotate(180deg);stroke:var(--kap-purple)}
+.faq-a{display:none;padding:.9rem 1.4rem 1.1rem;font-size:13px;color:var(--ink-3);line-height:1.7;border-bottom:1px solid var(--kap-light)}
+.faq-a.open{display:block}
+.faq-item:last-child .faq-q{border-bottom:none}
+.faq-item:last-child .faq-a.open{border-bottom:none}
+
+/* ══════════════════════════════════════
+   FOOTER
+══════════════════════════════════════ */
+.site-footer{
+  background:var(--kap-purple);color:white;
+  padding:3rem 2rem 2rem;
+}
+.footer-inner{max-width:1000px;margin:0 auto}
+.footer-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:2rem;padding-bottom:2rem;border-bottom:1px solid rgba(255,255,255,0.12)}
+.footer-brand .nav-logo-text{color:white;font-size:20px}
+.footer-brand .nav-logo-sub{color:rgba(255,255,255,0.5)}
+.footer-brand p{font-size:13px;color:rgba(255,255,255,0.5);margin-top:10px;max-width:280px;line-height:1.6}
+.footer-links h4{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:12px}
+.footer-links ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+.footer-links li a{font-size:13px;color:rgba(255,255,255,0.65);text-decoration:none;transition:color .14s}
+.footer-links li a:hover{color:white}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding-top:1.5rem}
+.footer-bottom p{font-size:12px;color:rgba(255,255,255,0.4)}
+.footer-disclaimer{font-size:11px;color:rgba(255,255,255,0.3);max-width:500px;line-height:1.5}
+.footer-chart-accent{display:inline-block;width:8px;height:8px;background:var(--kap-chart);border-radius:2px;margin-right:5px}
+
+@media(max-width:640px){
+  .tuition-grid{grid-template-columns:1fr}
+  .tuition-cell:nth-child(odd){border-right:none}
+  .search-grid{grid-template-columns:1fr}
+  .search-row{flex-direction:column}
+  .nav-links .nav-link{display:none}
+  .hero h1{font-size:2rem}
+  .hero-stats{gap:1.5rem}
+  .tool-intro{flex-direction:column}
+  .footer-top{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<nav class="site-nav">
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-mark">
+      <svg viewBox="0 0 20 20"><path d="M4 16V8l6-4 6 4v8M8 16v-5h4v5"/></svg>
+    </div>
+    <div>
+      <div class="nav-logo-text">HigherEd Tuition Looker</div>
+      <div class="nav-logo-sub">US University Tuition Intelligence</div>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="#how-it-works">How it works</a>
+    <a class="nav-link" href="#features">Features</a>
+    <a class="nav-link" href="#faq">FAQ</a>
+    <a class="nav-cta" href="#tool">Use the Tool</a>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      AI-Powered · Official Sources Only
+    </div>
+    <h1>US University Tuition,<br><em>Accurately Researched</em></h1>
+    <p class="hero-sub">HigherEd Tuition Looker searches, scrapes, and reads PDFs from official .edu websites to give you verified in-state and out-of-state tuition — with sources. No guessing, no third-party databases.</p>
+    <div class="hero-actions">
+      <a class="btn-hero" href="#tool">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
+        Look up a University
+      </a>
+      <a class="btn-hero-outline" href="#how-it-works">See how it works</a>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-num">4,000+</div>
+        <div class="hero-stat-label">US Universities covered</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">100%</div>
+        <div class="hero-stat-label">Official .edu sources</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">Real-time</div>
+        <div class="hero-stat-label">Live web + PDF lookup</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TRUST STRIP ═══ -->
+<div class="trust-strip">
+  <div class="trust-item">
+    <svg viewBox="0 0 16 16"><path d="M8 1l2 4.5h4.5l-3.5 2.5 1.5 4.5L8 10l-4.5 2.5 1.5-4.5L1.5 5.5H6z"/></svg>
+    Data sourced from official .edu websites only
+  </div>
+  <div class="trust-sep"></div>
+  <div class="trust-item">
+    <svg viewBox="0 0 16 16"><path d="M2 8l4 4 8-8"/></svg>
+    Verbatim evidence quotes from source pages
+  </div>
+  <div class="trust-sep"></div>
+  <div class="trust-item">
+    <svg viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 8h6M8 5v6"/></svg>
+    Program-specific tuition when available
+  </div>
+  <div class="trust-sep"></div>
+  <div class="trust-item">
+    <svg viewBox="0 0 16 16"><path d="M8 2v8m-3-3 3 3 3-3M3 13h10"/></svg>
+    Bulk export to Excel
+  </div>
+</div>
+
+<!-- ═══ HOW IT WORKS ═══ -->
+<section class="section" id="how-it-works">
+  <div class="section-label">How it works</div>
+  <h2 class="section-title">A 5-step research pipeline, not a database lookup</h2>
+  <p class="section-sub">Every search triggers a live AI pipeline that reads the actual university website — not cached data from a third party.</p>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <h3>Web search</h3>
+      <p>Finds 3–5 candidate tuition URLs on the university's <span class="step-accent">official .edu domain</span>, prioritising program-specific pages and PDF cost sheets.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <h3>Page scraping</h3>
+      <p>Reads the <span class="step-accent">live content</span> of the tuition schedule page, extracting exact dollar figures and academic year.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <h3>Program page</h3>
+      <p>When a program is specified, a <span class="step-accent">second dedicated page</span> is fetched — MBA, law, nursing and other programs often have different rates.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">4</div>
+      <h3>PDF reading</h3>
+      <p>Bursar PDFs and cost-of-attendance documents are <span class="step-accent">fetched and read directly</span> — not just linked.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">5</div>
+      <h3>Synthesis & fact-check</h3>
+      <p>Multiple sources are <span class="step-accent">cross-checked</span> for consistency. Discrepancies are flagged. The most specific, most recent data wins.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FEATURES ═══ -->
+<div class="features-bg" id="features">
+  <div class="section">
+    <div class="section-label">Features</div>
+    <h2 class="section-title">Everything you need for tuition research</h2>
+    <p class="section-sub">Built for students, advisors, researchers, and anyone who needs accurate, citable tuition data.</p>
+    <div class="features-grid">
+      <div class="feat-card">
+        <div class="feat-icon purple"><svg viewBox="0 0 20 20"><circle cx="8" cy="8" r="5.5"/><path d="M12 12l4 4"/></svg></div>
+        <h3>Single university lookup</h3>
+        <p>Search any US university by name with an optional program and level filter. Results include source links, confidence score, and notes.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon blue"><svg viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="12" rx="2"/><path d="M7 9h6M7 12h4"/></svg></div>
+        <h3>Program-specific tuition</h3>
+        <p>MBA, JD, MD, engineering, nursing — specify a program name to retrieve rates specific to that programme, not just general university fees.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon chart"><svg viewBox="0 0 20 20"><path d="M3 17V7l5-4 5 4V9m0 0v8M3 17h14"/></svg></div>
+        <h3>Total credits required</h3>
+        <p>Where available, pulls the total credit hours required to complete the programme — useful for estimating total degree cost.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon red"><svg viewBox="0 0 20 20"><path d="M10 3v8M10 14v1"/><circle cx="10" cy="10" r="8"/></svg></div>
+        <h3>Anti-hallucination guarantee</h3>
+        <p>The AI must quote verbatim text from the source page for every dollar figure. If no explicit figure is found, the field is null — never guessed.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon orange"><svg viewBox="0 0 20 20"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="6" height="6" rx="1"/></svg></div>
+        <h3>Bulk Excel upload</h3>
+        <p>Upload an Excel file with university names, programs and levels. The tool processes all rows and exports a formatted .xlsx report with all results.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon green"><svg viewBox="0 0 20 20"><path d="M4 17V8l6-5 6 5v9M8 17v-5h4v5"/></svg></div>
+        <h3>Verified source links</h3>
+        <p>Every result includes the exact URL of the official university page or PDF where the data was found — HTML and PDF sources are labelled separately.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TOOL ═══ -->
+<div class="tool-section" id="tool">
+  <div class="tool-intro">
+    <div class="tool-intro-text">
+      <div class="section-label">The tool</div>
+      <h2>HigherEd Tuition Looker</h2>
+      <p>Enter a university name below to begin. Add a program for more specific results.</p>
+    </div>
+  </div>
+  <div class="tool-wrapper">
+    <div class="tool-embed">
+
+      <!-- Tool header -->
+      <div class="tool-header">
+        <div class="tool-header-inner">
+          <div>
+            <div class="tool-header-badge">AI-Powered · Official Sources Only</div>
+            <h2>HigherEd Tuition Looker</h2>
+            <p>Searches, scrapes, and reads PDFs from official university websites. Never guesses — if data can't be verified from an official source, it says so.</p>
+            <div class="tool-header-pills">
+              <span class="tool-header-pill"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="5" r="3.5"/><path d="M8 8l2.5 2.5"/></svg>Web search</span>
+              <span class="tool-header-pill"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="10" height="8" rx="1"/><path d="M4 5h4M4 7h2"/></svg>Page scraping</span>
+              <span class="tool-header-pill"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 1h6l3 3v7H2V1zm6 0v3h3M4 6h4M4 8h4"/></svg>PDF reading</span>
+              <span class="tool-header-pill"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2v4l2 2"/><circle cx="6" cy="6" r="5"/></svg>Anti-hallucination</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab nav -->
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('single',this)">
+          <svg class="tab-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/></svg>
+          Single Lookup
+        </button>
+        <button class="tab-btn" onclick="switchTab('bulk',this)">
+          <svg class="tab-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1.5"/><line x1="5" y1="7" x2="11" y2="7"/><line x1="5" y1="10" x2="9" y2="10"/></svg>
+          Bulk Upload (Excel)
+        </button>
+      </div>
+
+      <!-- Single tab -->
+      <div id="tab-single" class="tab-panel active">
+        <div class="search-card">
+          <div class="search-grid">
+            <div class="field-group">
+              <label class="field-label" for="uni-input">University Name <span style="color:var(--kap-red)">*</span></label>
+              <input type="text" id="uni-input" placeholder="e.g. University of Michigan" autocomplete="off"/>
+            </div>
+            <div class="field-group">
+              <label class="field-label" for="prog-input">Program Name <span style="color:var(--kap-mid);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+              <input type="text" id="prog-input" placeholder="e.g. MBA, Computer Science, Nursing…" autocomplete="off"/>
+            </div>
+          </div>
+          <div class="search-row">
+            <select id="level-select" style="max-width:180px">
+              <option value="">Any level</option>
+              <option value="Undergraduate">Undergraduate</option>
+              <option value="Graduate">Graduate</option>
+              <option value="PhD / Doctoral">PhD / Doctoral</option>
+              <option value="Professional (JD/MD/MBA)">Professional (JD/MD/MBA)</option>
+              <option value="Online">Online</option>
+            </select>
+            <button class="btn-primary" id="search-btn" onclick="lookupSingle()">Look up Tuition</button>
+            <button class="btn-secondary" id="clear-btn" onclick="clearSingle()" style="display:none">Clear</button>
+          </div>
+          <div class="hint">Provide a program name to get program-specific tuition (e.g. MBAs and law schools often differ from general graduate rates).</div>
+          <div class="examples">
+            <span class="example-chip" onclick="setExample('University of Michigan','Computer Science','Undergraduate')">UMich CS Undergrad</span>
+            <span class="example-chip" onclick="setExample('UCLA','MBA','Graduate')">UCLA MBA</span>
+            <span class="example-chip" onclick="setExample('University of Texas at Austin','Law','Professional (JD/MD/MBA)')">UT Austin Law</span>
+            <span class="example-chip" onclick="setExample('Penn State University','Nursing','Undergraduate')">Penn State Nursing</span>
+            <span class="example-chip" onclick="setExample('Ohio State University','','')">Ohio State (general)</span>
+          </div>
+        </div>
+
+        <div class="pipeline-card" id="pipeline-card">
+          <div class="pipeline-title">Research Pipeline</div>
+          <div class="steps-list" id="steps-list"></div>
+        </div>
+
+        <div class="evidence-card" id="evidence-card">
+          <div class="evidence-header" onclick="toggleEvidence()">
+            <h4>Evidence Log <span id="ev-count" style="color:var(--kap-purple);font-weight:600"></span></h4>
+            <span class="evidence-toggle" id="ev-toggle">Show ▾</span>
+          </div>
+          <div class="evidence-body" id="evidence-body"></div>
+        </div>
+
+        <div class="error-card" id="single-error">
+          <strong>Could not retrieve tuition data</strong>
+          <p id="single-error-msg"></p>
+        </div>
+
+        <div class="result-card" id="result-card">
+          <div class="result-header">
+            <div>
+              <h2 id="result-name">University Name</h2>
+              <div class="result-sub" id="result-sub"></div>
+            </div>
+            <span class="year-badge" id="result-year"></span>
+          </div>
+          <div id="program-note-container"></div>
+          <div id="warning-container"></div>
+          <div class="confidence-bar">
+            <span class="conf-label">Data confidence</span>
+            <div class="conf-track"><div class="conf-fill" id="conf-fill" style="width:0%"></div></div>
+            <span class="conf-pct" id="conf-pct">—</span>
+          </div>
+          <div class="tuition-grid">
+            <div class="tuition-cell in-state">
+              <div class="cell-label">In-State Tuition</div>
+              <div class="amount" id="in-state-amt">—</div>
+              <div class="per-year" id="in-state-note">per academic year</div>
+            </div>
+            <div class="tuition-cell out-state">
+              <div class="cell-label">Out-of-State Tuition</div>
+              <div class="amount" id="out-state-amt">—</div>
+              <div class="per-year" id="out-state-note">per academic year</div>
+            </div>
+            <div class="tuition-cell fees" id="fees-cell" style="display:none">
+              <div class="cell-label">Fees</div>
+              <div class="amount" style="font-size:22px;color:var(--ink-2)" id="fees-amt">—</div>
+              <div class="per-year">mandatory fees</div>
+            </div>
+            <div class="tuition-cell fees" id="room-board-cell" style="display:none">
+              <div class="cell-label">Room & Board (est.)</div>
+              <div class="amount" style="font-size:22px;color:var(--ink-2)" id="room-board-amt">—</div>
+              <div class="per-year">on-campus estimate</div>
+            </div>
+            <div class="tuition-cell fees" id="total-credits-cell" style="display:none">
+              <div class="cell-label">Total Credits Required</div>
+              <div class="amount" style="font-size:28px;color:var(--kap-blue-deep)" id="total-credits-amt">—</div>
+              <div class="per-year">credit hours to complete program</div>
+            </div>
+          </div>
+          <div class="info-section" id="notes-section" style="display:none">
+            <div class="notes-label">Notes</div>
+            <div id="notes-text" style="font-size:13px;line-height:1.7"></div>
+          </div>
+          <div class="source-section">
+            <div class="src-label">Verified Sources</div>
+            <div id="sources-container"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bulk tab -->
+      <div id="tab-bulk" class="tab-panel">
+        <div class="template-section">
+          <h4>Required Excel Column Format</h4>
+          <p>Your file should have these columns (order flexible, names case-insensitive). Download the ready-to-use template:</p>
+          <div class="col-chips">
+            <span class="col-chip">university_name</span>
+            <span class="col-chip">program_name</span>
+            <span class="col-chip">program_level</span>
+          </div>
+          <button class="btn-secondary" onclick="downloadTemplate()">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8m-3-3 3 3 3-3M3 13h10"/></svg>
+            Download Template (.xlsx)
+          </button>
+        </div>
+        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+          <div class="upload-icon">📂</div>
+          <h3>Drop your Excel file here</h3>
+          <p>or <span class="browse-link">browse to upload</span> · Supports .xlsx, .xls, .csv</p>
+          <input type="file" id="file-input" accept=".xlsx,.xls,.csv" onchange="handleFileSelect(event)"/>
+        </div>
+        <div id="preview-section" style="display:none">
+          <div class="preview-section">
+            <div class="preview-header">
+              <h4 id="preview-title">Preview</h4>
+              <span id="preview-count"></span>
+            </div>
+            <div class="preview-table-wrap">
+              <table><thead id="preview-thead"></thead><tbody id="preview-tbody"></tbody></table>
+            </div>
+          </div>
+          <div class="bulk-actions">
+            <button class="btn-primary" id="bulk-run-btn" onclick="runBulkLookup()">Fetch Tuition for All Rows</button>
+            <button class="btn-secondary" onclick="clearUpload()">Clear</button>
+            <span class="progress-info" id="bulk-progress-info"></span>
+          </div>
+          <div class="progress-bar-wrap" id="progress-bar-wrap" style="display:none">
+            <div class="progress-bar-fill" id="progress-bar-fill" style="width:0%"></div>
+          </div>
+        </div>
+        <div id="results-section" style="display:none">
+          <div class="results-section">
+            <div class="results-header">
+              <h4>Results</h4>
+              <button class="btn-download" onclick="downloadResultsXLSX()">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8m-3-3 3 3 3-3M3 13h10"/></svg>
+                Download Results (.xlsx)
+              </button>
+            </div>
+            <div class="preview-table-wrap">
+              <table>
+                <thead><tr><th>University</th><th>Program</th><th>Level</th><th>Acad. Year</th><th>In-State</th><th>Out-of-State</th><th>Fees</th><th>Total Credits</th><th>Status</th><th>Source URL</th><th>Notes</th></tr></thead>
+                <tbody id="results-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tool-embed -->
+  </div><!-- /tool-wrapper -->
+</div>
+
+<!-- ═══ FAQ ═══ -->
+<div style="background:var(--kap-purple-xpale);border-top:1px solid var(--kap-purple-pale)">
+  <div class="section" id="faq">
+    <div class="section-label">FAQ</div>
+    <h2 class="section-title">Common questions</h2>
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Where does the data come from?
+          <svg class="faq-chevron" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4"/></svg>
+        </button>
+        <div class="faq-a">Exclusively from official university websites (.edu domains). The tool searches, fetches, and reads live web pages and PDFs hosted by the university itself — it does not use any third-party databases like College Board, Niche, or Peterson's.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          How accurate is the data?
+          <svg class="faq-chevron" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4"/></svg>
+        </button>
+        <div class="faq-a">Each result includes a confidence score. The AI is required to quote verbatim text from the source page that contains the dollar figure — it cannot report a number it cannot see. If no explicit figure is found, the field is left null rather than estimated. For high-confidence results (85%+) the data directly matches what is published on the university's official tuition page.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Can I look up program-specific tuition?
+          <svg class="faq-chevron" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4"/></svg>
+        </button>
+        <div class="faq-a">Yes. Enter a program name (e.g. "MBA", "Computer Science", "Nursing") alongside the university name. The tool will search for a program-specific tuition page — many professional programs (law, medicine, business) have different rates from general university tuition. A green banner confirms when program-specific data was found.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          How do I use the bulk upload feature?
+          <svg class="faq-chevron" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4"/></svg>
+        </button>
+        <div class="faq-a">Switch to the "Bulk Upload" tab and download the template Excel file. Fill in your list of universities with optional program names and levels, then upload the file. The tool processes each row and exports a formatted .xlsx report with all tuition data, source URLs, and notes.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          What is "Total Credits Required"?
+          <svg class="faq-chevron" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4"/></svg>
+        </button>
+        <div class="faq-a">When a program page explicitly states the number of credit hours required to complete the degree (e.g. "120 credit hours required for graduation"), the tool extracts this figure. Combined with a per-credit tuition rate, this gives you an estimated total degree cost. This field is only populated when the number is explicitly stated — it is never assumed.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Should I rely on this data for financial decisions?
+          <svg class="faq-chevron" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4"/></svg>
+        </button>
+        <div class="faq-a">This tool is designed for research and comparison purposes. While it pulls data directly from official sources with citation, tuition figures can change during the academic year and some programs may have additional costs not listed on the general tuition page. Always verify the final figures directly on the university's official website and with their financial aid office before making enrolment or financial decisions.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="nav-logo" style="text-decoration:none">
+          <div class="nav-logo-mark" style="background:rgba(255,255,255,0.15)">
+            <svg viewBox="0 0 20 20" style="width:18px;height:18px;fill:none;stroke:white;stroke-width:1.8"><path d="M4 16V8l6-4 6 4v8M8 16v-5h4v5"/></svg>
+          </div>
+          <div>
+            <div class="nav-logo-text">HigherEd Tuition Looker</div>
+            <div class="nav-logo-sub" style="color:rgba(255,255,255,0.4)">US University Tuition Intelligence</div>
+          </div>
+        </div>
+        <p>AI-powered tuition lookup sourced exclusively from official US university websites. Accurate, cited, and exportable.</p>
+      </div>
+      <div class="footer-links">
+        <h4>Navigate</h4>
+        <ul>
+          <li><a href="#tool">Use the Tool</a></li>
+          <li><a href="#how-it-works">How it works</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Data Policy</h4>
+        <ul>
+          <li><a href="#faq">Official sources only</a></li>
+          <li><a href="#faq">Anti-hallucination</a></li>
+          <li><a href="#faq">Verify before deciding</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p><span class="footer-chart-accent"></span>HigherEd Tuition Looker &mdash; Built with Kaplan brand colours. Data sourced from official .edu websites.</p>
+      <p class="footer-disclaimer">Tuition figures are for research purposes only. Always verify directly with the university before making financial or enrolment decisions. Figures may change during the academic year.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════
+// FAQ
+// ═══════════════════════════════════════════════
+function toggleFaq(btn){
+  const a=btn.nextElementSibling;
+  const isOpen=a.classList.contains('open');
+  document.querySelectorAll('.faq-a.open').forEach(el=>{el.classList.remove('open');el.previousElementSibling.classList.remove('open')});
+  if(!isOpen){a.classList.add('open');btn.classList.add('open')}
+}
+
+// ═══════════════════════════════════════════════
+// SYSTEM PROMPTS
+// ═══════════════════════════════════════════════
+const SEARCH_PROMPT=`You are a university tuition researcher. Your job is to find the OFFICIAL tuition pages for a given US university and program using web_search.
+RULES:
+- Search for the tuition/cost/fees page on the university's own .edu domain ONLY
+- Find at least 2-3 candidate URLs: the general tuition page AND any program-specific pages
+- If a program is specified, also search for that program's specific cost/tuition page
+- PDF bursar sheets, financial planning PDFs, and cost-of-attendance PDFs from .edu domains are valid
+- Return ONLY a JSON array of candidate URLs to scrape — no other text, no markdown fences
+Return format:
+{"search_queries_used":["query1"],"candidate_urls":[{"url":"https://...","type":"html|pdf","description":"what this page likely contains","priority":1}]}
+Priority: 1=most relevant (program-specific), 2=general tuition schedule, 3=cost of attendance overview
+If no .edu URLs found, set candidate_urls to empty array.`;
+
+const SCRAPE_PROMPT=`You are a university tuition data extractor. Extract EXACT tuition figures — do not estimate or infer.
+STRICT ANTI-HALLUCINATION RULES:
+1. ONLY report numbers you can see verbatim in the provided content
+2. If a number is not explicitly present, set it to null — never guess
+3. If content is about a different university, set data_found:false
+4. If the page has no specific dollar amounts, set data_found:false
+5. Quote the EXACT sentence from the source that contains each dollar figure in evidence_quotes
+6. If you see a range, report the lower bound and note the range
+7. Program-specific tuition overrides general university tuition
+8. For total_credits_required: extract credit hours needed to complete the program. Set null if not explicitly stated — never assume standard values.
+Return ONLY valid JSON — no markdown, no preamble:
+{"data_found":true,"university_name":"Official full name","location":"City, State","academic_year":"2024-2025","program_name":"string|null","program_level":"Undergraduate|Graduate|Professional|PhD|null","in_state_tuition":12345,"out_of_state_tuition":34567,"fees":1234,"room_board":null,"tuition_type":"tuition_only|tuition_and_fees|cost_of_attendance","is_per_credit":false,"credit_hours_assumed":null,"total_credits_required":null,"notes":"string","confidence":0.95,"confidence_reason":"string","evidence_quotes":["Exact quoted text"],"source_url":"string","source_type":"html|pdf"}`;
+
+const SYNTHESIZE_PROMPT=`You are a tuition data synthesizer. Receive multiple extracted tuition objects and return the MOST ACCURATE and MOST SPECIFIC result.
+SYNTHESIS RULES:
+1. Program-specific data ALWAYS wins over general data
+2. More recent academic year wins
+3. Higher confidence wins when years match
+4. If sources contradict >10%, note discrepancy and use lower value, flag low confidence
+5. NEVER invent data — if no source has a value, it stays null
+6. Final confidence is the MINIMUM of contributing sources
+7. If all sources have data_found:false, final result must also have data_found:false
+Return ONLY valid JSON:
+{"data_found":true,"university_name":"string","location":"string","academic_year":"string","program_name":"string|null","program_level":"string|null","in_state_tuition":null,"out_of_state_tuition":null,"fees":null,"room_board":null,"tuition_type":"string","is_per_credit":false,"total_credits_required":null,"notes":"string","confidence":0.0,"confidence_reason":"string","discrepancies":"string|null","sources":[{"url":"string","title":"string","type":"html|pdf","description":"string"}]}`;
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let evidenceLog=[],pipelineSteps=[];
+let uploadedRows=[],bulkResults=[],isBulkRunning=false;
+
+// ═══════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════
+function fmt(n){return n!=null?'$'+Math.round(n).toLocaleString('en-US'):''}
+function switchTab(name,el){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  el.classList.add('active');
+}
+function setExample(uni,prog,level){
+  document.getElementById('uni-input').value=uni;
+  document.getElementById('prog-input').value=prog;
+  document.getElementById('level-select').value=level;
+  document.getElementById('tool').scrollIntoView({behavior:'smooth',block:'start'});
+  setTimeout(()=>document.getElementById('uni-input').focus(),400);
+}
+function clearSingle(){
+  document.getElementById('uni-input').value='';
+  document.getElementById('prog-input').value='';
+  document.getElementById('level-select').value='';
+  document.getElementById('result-card').classList.remove('visible');
+  document.getElementById('single-error').classList.remove('visible');
+  document.getElementById('pipeline-card').classList.remove('visible');
+  document.getElementById('evidence-card').classList.remove('visible');
+  document.getElementById('clear-btn').style.display='none';
+  evidenceLog=[];
+}
+
+// ═══════════════════════════════════════════════
+// PIPELINE UI
+// ═══════════════════════════════════════════════
+const STEPS_DEF=[
+  {id:'search', label:'Web search for official pages'},
+  {id:'scrape1',label:'Scraping tuition page'},
+  {id:'scrape2',label:'Scraping program-specific page'},
+  {id:'pdf',    label:'Reading PDF cost sheets'},
+  {id:'synth',  label:'Synthesizing & fact-checking results'},
+];
+function initPipeline(){
+  pipelineSteps=STEPS_DEF.map(s=>({...s,state:'idle'}));
+  const list=document.getElementById('steps-list');list.innerHTML='';
+  pipelineSteps.forEach(s=>{
+    const div=document.createElement('div');div.className='step-row';div.id='step-'+s.id;
+    div.innerHTML=`<div class="step-icon idle" id="sicon-${s.id}">·</div><div class="step-text"><div class="step-label">${s.label}</div><div class="step-detail" id="sdet-${s.id}"></div></div>`;
+    list.appendChild(div);
+  });
+  document.getElementById('pipeline-card').classList.add('visible');
+}
+function setStep(id,state,detail=''){
+  const row=document.getElementById('step-'+id);
+  const icon=document.getElementById('sicon-'+id);
+  const det=document.getElementById('sdet-'+id);
+  if(!row)return;
+  row.className='step-row step-'+state;
+  icon.className='step-icon '+state;
+  if(state==='active')icon.innerHTML='<span class="spin-sm"></span>';
+  else if(state==='done')icon.textContent='✓';
+  else if(state==='error')icon.textContent='✕';
+  else if(state==='skip')icon.textContent='—';
+  else icon.textContent='·';
+  if(detail)det.textContent=detail;
+}
+function addEvidence(type,text){
+  evidenceLog.push({type,text});
+  const body=document.getElementById('evidence-body');
+  const item=document.createElement('div');item.className='ev-item';
+  const lbl={search:'SEARCH',scrape:'SCRAPE',pdf:'PDF',synth:'SYNTH'}[type]||type.toUpperCase();
+  const cls={search:'ev-search',scrape:'ev-scrape',pdf:'ev-pdf',synth:'ev-synth'}[type]||'ev-search';
+  item.innerHTML=`<span class="ev-type ${cls}">${lbl}</span>${text}`;
+  body.appendChild(item);
+  document.getElementById('ev-count').textContent=`(${evidenceLog.length})`;
+  document.getElementById('evidence-card').classList.add('visible');
+}
+function toggleEvidence(){
+  const body=document.getElementById('evidence-body');
+  const tog=document.getElementById('ev-toggle');
+  body.classList.toggle('open');
+  tog.textContent=body.classList.contains('open')?'Hide ▴':'Show ▾';
+}
+
+// ═══════════════════════════════════════════════
+// AI CALL
+// ═══════════════════════════════════════════════
+async function callAI(systemPrompt,userMsg,maxTokens=2000){
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,system:systemPrompt,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:userMsg}]})
+  });
+  const data=await res.json();
+  if(data.error)throw new Error(data.error.message||'API error');
+  const raw=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').replace(/```json|```/g,'').trim();
+  const match=raw.match(/\{[\s\S]*\}/);
+  if(!match)throw new Error('No JSON found in response');
+  return JSON.parse(match[0]);
+}
+async function scrapeURL(url,university,program,level){
+  const isPDF=url.toLowerCase().includes('.pdf');
+  const msg=`University: "${university}"\nProgram: "${program||'general/all programs'}"\nLevel: "${level||'any'}"\n\nPlease fetch and read this ${isPDF?'PDF':'page'}: ${url}\n\nExtract tuition data. If no explicit dollar amounts, return data_found:false. Do not estimate.`;
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:SCRAPE_PROMPT,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:msg}]})
+  });
+  const data=await res.json();
+  if(data.error)throw new Error(data.error.message);
+  const raw=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').replace(/```json|```/g,'').trim();
+  const match=raw.match(/\{[\s\S]*\}/);
+  if(!match)return{data_found:false,reason:'No structured data in response',source_url:url};
+  const parsed=JSON.parse(match[0]);
+  parsed.source_url=parsed.source_url||url;
+  parsed.source_type=isPDF?'pdf':'html';
+  return parsed;
+}
+
+// ═══════════════════════════════════════════════
+// SINGLE LOOKUP
+// ═══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('uni-input').addEventListener('keydown',e=>{if(e.key==='Enter')lookupSingle()});
+});
+
+async function lookupSingle(){
+  const uni=document.getElementById('uni-input').value.trim();
+  if(!uni){document.getElementById('uni-input').focus();return}
+  const prog=document.getElementById('prog-input').value.trim();
+  const level=document.getElementById('level-select').value;
+  const btn=document.getElementById('search-btn');
+  btn.disabled=true;btn.textContent='Searching…';
+  document.getElementById('result-card').classList.remove('visible');
+  document.getElementById('single-error').classList.remove('visible');
+  document.getElementById('clear-btn').style.display='none';
+  evidenceLog=[];
+  document.getElementById('evidence-body').innerHTML='';
+  document.getElementById('ev-count').textContent='';
+  document.getElementById('evidence-card').classList.remove('visible');
+  initPipeline();
+  document.getElementById('tool').scrollIntoView({behavior:'smooth',block:'start'});
+  try{
+    setStep('search','active','Searching official .edu tuition pages…');
+    addEvidence('search',`Query: "${uni}"${prog?' / '+prog:''}${level?' ('+level+')':''}`);
+    let candidates;
+    try{
+      candidates=await callAI(SEARCH_PROMPT,`University: "${uni}"\nProgram: "${prog||'none'}"\nLevel: "${level||'any'}"\n\nFind 3-5 official .edu URLs for tuition data. Include any PDF cost sheets.`);
+      setStep('search','done',`Found ${(candidates.candidate_urls||[]).length} candidate URLs`);
+      (candidates.candidate_urls||[]).forEach(c=>{addEvidence('search',`[P${c.priority}] ${c.type.toUpperCase()} — ${c.url}`)});
+    }catch(e){setStep('search','error','Search failed: '+e.message);throw e}
+    const urls=(candidates.candidate_urls||[]).sort((a,b)=>a.priority-b.priority);
+    if(!urls.length)throw new Error('No official .edu tuition pages found for this university.');
+    const htmlURLs=urls.filter(u=>u.type==='html').slice(0,2);
+    const pdfURLs=urls.filter(u=>u.type==='pdf').slice(0,2);
+    const scrapedResults=[];
+    if(htmlURLs[0]){
+      setStep('scrape1','active',htmlURLs[0].url);
+      try{
+        const r=await scrapeURL(htmlURLs[0].url,uni,prog,level);
+        scrapedResults.push(r);
+        if(r.data_found){setStep('scrape1','done',`Found data — AY ${r.academic_year||'?'}, confidence ${Math.round((r.confidence||0)*100)}%`);addEvidence('scrape',`✓ ${htmlURLs[0].url} → In: ${fmt(r.in_state_tuition)||'N/A'} | Out: ${fmt(r.out_of_state_tuition)||'N/A'}`);if(r.evidence_quotes)r.evidence_quotes.forEach(q=>addEvidence('scrape','Quote: "'+q.slice(0,120)+(q.length>120?'…':'')+'"'))}
+        else{setStep('scrape1','skip','No tuition data on this page');addEvidence('scrape','✗ '+htmlURLs[0].url+' — no figures found')}
+      }catch(e){setStep('scrape1','error',e.message);addEvidence('scrape','Error: '+e.message)}
+    }else setStep('scrape1','skip','No HTML page found');
+    if(htmlURLs[1]){
+      setStep('scrape2','active',htmlURLs[1].url);
+      try{
+        const r=await scrapeURL(htmlURLs[1].url,uni,prog,level);
+        scrapedResults.push(r);
+        if(r.data_found){setStep('scrape2','done',`Found data — AY ${r.academic_year||'?'}, confidence ${Math.round((r.confidence||0)*100)}%`);addEvidence('scrape',`✓ ${htmlURLs[1].url} → In: ${fmt(r.in_state_tuition)||'N/A'} | Out: ${fmt(r.out_of_state_tuition)||'N/A'}`)}
+        else setStep('scrape2','skip','No tuition data on this page');
+      }catch(e){setStep('scrape2','error',e.message)}
+    }else setStep('scrape2','skip',prog?'No separate program page found':'No secondary page');
+    if(pdfURLs.length){
+      setStep('pdf','active',`Reading ${pdfURLs.length} PDF(s)…`);
+      let pdfFound=0;
+      for(const p of pdfURLs){
+        try{
+          addEvidence('pdf','Fetching PDF: '+p.url);
+          const r=await scrapeURL(p.url,uni,prog,level);
+          scrapedResults.push(r);
+          if(r.data_found){pdfFound++;addEvidence('pdf',`✓ PDF data found → In: ${fmt(r.in_state_tuition)||'N/A'} | Out: ${fmt(r.out_of_state_tuition)||'N/A'}`);if(r.evidence_quotes)r.evidence_quotes.slice(0,2).forEach(q=>addEvidence('pdf','Quote: "'+q.slice(0,120)+'"'))}
+          else addEvidence('pdf','✗ No figures in this PDF');
+        }catch(e){addEvidence('pdf','Error reading PDF: '+e.message)}
+      }
+      setStep('pdf',pdfFound>0?'done':'skip',pdfFound>0?`${pdfFound} PDF(s) yielded data`:'No tuition data in PDFs');
+    }else setStep('pdf','skip','No PDF cost sheets found');
+    setStep('synth','active','Cross-checking all sources…');
+    const foundResults=scrapedResults.filter(r=>r&&r.data_found);
+    if(!foundResults.length){setStep('synth','error','No confirmed data from any source');throw new Error('Could not find verified tuition data on any official page. Try visiting the university website directly.')}
+    let finalResult;
+    if(foundResults.length===1){
+      finalResult=foundResults[0];
+      finalResult.sources=[{url:foundResults[0].source_url||'',type:foundResults[0].source_type||'html',title:'Official tuition page',description:'Primary source'}];
+      setStep('synth','done','Single authoritative source confirmed');
+      addEvidence('synth','Using single source — '+foundResults[0].source_url);
+    }else{
+      try{
+        const synthInput=`Multiple sources for "${uni}"${prog?' / '+prog:''}:\n\n`+foundResults.map((r,i)=>`SOURCE ${i+1}: ${JSON.stringify(r)}`).join('\n\n');
+        finalResult=await callAI(SYNTHESIZE_PROMPT,synthInput,1500);
+        setStep('synth','done',`Synthesized ${foundResults.length} sources, confidence ${Math.round((finalResult.confidence||0)*100)}%`);
+        addEvidence('synth',`Final: In: ${fmt(finalResult.in_state_tuition)||'N/A'} | Out: ${fmt(finalResult.out_of_state_tuition)||'N/A'} | Credits: ${finalResult.total_credits_required||'N/A'} | Conf: ${Math.round((finalResult.confidence||0)*100)}%`);
+        if(finalResult.discrepancies)addEvidence('synth','⚠ Discrepancy: '+finalResult.discrepancies);
+      }catch(e){
+        finalResult=foundResults.reduce((best,r)=>(r.confidence||0)>(best.confidence||0)?r:best,foundResults[0]);
+        finalResult.sources=[{url:finalResult.source_url||'',type:finalResult.source_type||'html',title:'Best source',description:'Highest confidence source'}];
+        setStep('synth','done','Used highest-confidence source');
+      }
+    }
+    renderSingleResult(finalResult,prog,level);
+  }catch(e){
+    document.getElementById('single-error-msg').textContent=e.message;
+    document.getElementById('single-error').classList.add('visible');
+  }finally{
+    btn.disabled=false;btn.textContent='Look up Tuition';
+    document.getElementById('clear-btn').style.display='';
+  }
+}
+
+function renderSingleResult(r,prog,level){
+  document.getElementById('result-name').textContent=r.university_name||'University';
+  const subParts=[];
+  if(r.location)subParts.push(r.location);
+  if(r.program_name)subParts.push(r.program_name);
+  else if(prog)subParts.push(prog+' (general rates shown)');
+  if(r.program_level||level)subParts.push(r.program_level||level);
+  document.getElementById('result-sub').textContent=subParts.join(' · ');
+  document.getElementById('result-year').textContent=r.academic_year?`AY ${r.academic_year}`:'';
+  const progNoteContainer=document.getElementById('program-note-container');
+  progNoteContainer.innerHTML='';
+  if(prog&&!r.program_name)progNoteContainer.innerHTML=`<div class="program-note-bar"><span>⚠</span><span>Program-specific tuition for <strong>${prog}</strong> was not found. These are general rates. Check the program's admissions page for program-specific costs.</span></div>`;
+  else if(r.program_name)progNoteContainer.innerHTML=`<div style="background:var(--kap-purple-pale);border-bottom:1px solid rgba(36,15,110,0.15);padding:9px 14px;font-size:12px;color:var(--kap-purple);display:flex;gap:7px;align-items:center"><span>✓</span><span>Program-specific tuition found for <strong>${r.program_name}</strong></span></div>`;
+  const typeNote=r.tuition_type==='tuition_and_fees'?'tuition + mandatory fees':r.tuition_type==='cost_of_attendance'?'cost of attendance estimate':r.is_per_credit?'per credit hour':'tuition only, per academic year';
+  const inAmt=fmt(r.in_state_tuition);const outAmt=fmt(r.out_of_state_tuition);
+  document.getElementById('in-state-amt').textContent=inAmt||'N/A';
+  document.getElementById('in-state-note').textContent=inAmt?typeNote:'Not available';
+  document.getElementById('out-state-amt').textContent=outAmt||'N/A';
+  document.getElementById('out-state-note').textContent=outAmt?typeNote:'Not available';
+  document.getElementById('fees-cell').style.display=r.fees?'block':'none';
+  if(r.fees)document.getElementById('fees-amt').textContent=fmt(r.fees);
+  document.getElementById('room-board-cell').style.display=r.room_board?'block':'none';
+  if(r.room_board)document.getElementById('room-board-amt').textContent=fmt(r.room_board);
+  document.getElementById('total-credits-cell').style.display=r.total_credits_required?'block':'none';
+  if(r.total_credits_required)document.getElementById('total-credits-amt').textContent=Math.round(r.total_credits_required)+' cr';
+  const confPct=Math.round((r.confidence||0.8)*100);
+  document.getElementById('conf-fill').style.width=confPct+'%';
+  document.getElementById('conf-fill').style.background=confPct>=85?'var(--kap-purple)':confPct>=65?'var(--kap-blue)':'var(--kap-red)';
+  document.getElementById('conf-pct').textContent=confPct+'%';
+  const warnContainer=document.getElementById('warning-container');warnContainer.innerHTML='';
+  if(r.confidence<0.75)warnContainer.innerHTML=`<div class="warning-banner"><span class="warn-icon">⚠</span><span>${r.confidence_reason||'Data confidence is low — verify directly on the official university website.'}</span></div>`;
+  if(r.discrepancies)warnContainer.innerHTML+=`<div class="warning-banner" style="margin-top:6px"><span class="warn-icon">⚡</span><span><strong>Source discrepancy: </strong>${r.discrepancies}</span></div>`;
+  const notesText=[r.notes,r.is_per_credit&&r.total_credits_required?`Per-credit rate × ${r.total_credits_required} credits = estimated total program cost.`:r.is_per_credit?'Note: figures shown are per credit hour — multiply by credit load for annual estimate.':null].filter(Boolean).join(' ');
+  if(notesText){document.getElementById('notes-section').style.display='block';document.getElementById('notes-text').textContent=notesText}
+  else document.getElementById('notes-section').style.display='none';
+  const srcContainer=document.getElementById('sources-container');srcContainer.innerHTML='';
+  const sources=r.sources||[];
+  if(sources.length){
+    sources.forEach(src=>{
+      const isPDF=(src.type==='pdf'||((src.url||'').toLowerCase().includes('.pdf')));
+      const div=document.createElement('div');div.className='source-link';
+      div.innerHTML=`<div class="src-icon ${isPDF?'pdf':'web'}"><svg viewBox="0 0 12 12"><path d="M1 1h5l3 3v7H1V1zm5 0v3h3"/></svg></div><div><a href="${src.url||'#'}" target="_blank" rel="noopener">${src.title||src.url}</a><span class="src-badge ${isPDF?'pdf':'html'}">${isPDF?'PDF':'HTML'}</span>${src.description?`<div style="font-size:11px;color:var(--kap-mid);margin-top:2px">${src.description}</div>`:''}</div>`;
+      srcContainer.appendChild(div);
+    });
+  }else srcContainer.innerHTML='<div style="font-size:12px;color:var(--kap-mid);font-style:italic">No source URLs returned — please verify on the official university website.</div>';
+  document.getElementById('result-card').classList.add('visible');
+}
+
+// ═══════════════════════════════════════════════
+// BULK
+// ═══════════════════════════════════════════════
+async function callAI_bulk(universityName,program,level){
+  const msg=`Look up current in-state and out-of-state tuition for: ${universityName}${program?' — program: '+program:''}${level?' — level: '+level:''}. Search ONLY on the university's official .edu website. Return the JSON as specified.`;
+  const BULK_SYSTEM=`You are a university tuition research assistant. Find current tuition from official .edu websites only. Return ONLY valid JSON:
+{"university_name":"string","location":"string","academic_year":"string","program_name":"string|null","in_state_tuition":number|null,"out_of_state_tuition":number|null,"fees":number|null,"room_board":number|null,"tuition_type":"string","total_credits_required":number|null,"notes":"string","confidence":0.0-1.0,"confidence_reason":"string","sources":[{"title":"string","url":"string","description":"string"}],"data_found":true}
+If not found: {"university_name":"string","data_found":false,"reason":"string"}`;
+  const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:BULK_SYSTEM,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:msg}]})});
+  const data=await res.json();
+  if(data.error)throw new Error(data.error.message);
+  const raw=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').replace(/```json|```/g,'').trim();
+  const match=raw.match(/\{[\s\S]*\}/);
+  if(!match)throw new Error('No JSON');
+  return JSON.parse(match[0]);
+}
+function downloadTemplate(){
+  const ws=XLSX.utils.aoa_to_sheet([['university_name','program_name','program_level'],['University of Michigan','Computer Science','Undergraduate'],['UCLA','MBA','Graduate'],['University of Texas at Austin','Electrical Engineering','Graduate'],['Penn State University','Nursing','Undergraduate']]);
+  ws['!cols']=[{wch:35},{wch:30},{wch:20}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Universities');
+  XLSX.writeFile(wb,'highered_tuition_looker_template.xlsx');
+}
+function handleDragOver(e){e.preventDefault();document.getElementById('upload-zone').classList.add('drag-over')}
+function handleDragLeave(){document.getElementById('upload-zone').classList.remove('drag-over')}
+function handleDrop(e){e.preventDefault();document.getElementById('upload-zone').classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f)processFile(f)}
+function handleFileSelect(e){const f=e.target.files[0];if(f)processFile(f)}
+function processFile(file){
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const wb=XLSX.read(e.target.result,{type:'binary'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const json=XLSX.utils.sheet_to_json(ws,{defval:''});
+    if(!json.length){alert('No data found.');return}
+    const norm=s=>String(s).toLowerCase().replace(/[\s_\-]/g,'');
+    const headers=Object.keys(json[0]);
+    const findCol=targets=>headers.find(h=>targets.some(t=>norm(h)===norm(t)));
+    const colUni=findCol(['university_name','universityname','university','school']);
+    const colProg=findCol(['program_name','programname','program','major','course']);
+    const colLevel=findCol(['program_level','programlevel','level','degree','degreelevel']);
+    if(!colUni){alert('Could not find "university_name" column. Please use the template.');return}
+    uploadedRows=json.map(row=>({university:String(row[colUni]||'').trim(),program:colProg?String(row[colProg]||'').trim():'',level:colLevel?String(row[colLevel]||'').trim():'',status:'pending',result:null})).filter(r=>r.university);
+    bulkResults=[];
+    document.getElementById('results-section').style.display='none';
+    renderPreview();
+    document.getElementById('preview-section').style.display='block';
+    document.getElementById('bulk-progress-info').textContent=`${uploadedRows.length} rows ready`;
+  };
+  reader.readAsBinaryString(file);
+}
+function renderPreview(){
+  document.getElementById('preview-thead').innerHTML='<tr><th>#</th><th>University</th><th>Program</th><th>Level</th><th>Status</th></tr>';
+  const tbody=document.getElementById('preview-tbody');tbody.innerHTML='';
+  document.getElementById('preview-title').textContent='Uploaded Data';
+  document.getElementById('preview-count').textContent=uploadedRows.length+' rows';
+  uploadedRows.forEach((row,i)=>{const tr=document.createElement('tr');tr.id='row-'+i;tr.innerHTML=`<td>${i+1}</td><td>${row.university}</td><td>${row.program||'—'}</td><td>${row.level||'—'}</td><td><span class="status-badge status-pending" id="status-${i}">pending</span></td>`;tbody.appendChild(tr)});
+}
+function clearUpload(){uploadedRows=[];bulkResults=[];document.getElementById('preview-section').style.display='none';document.getElementById('results-section').style.display='none';document.getElementById('file-input').value='';document.getElementById('bulk-progress-info').textContent='';document.getElementById('progress-bar-wrap').style.display='none'}
+async function runBulkLookup(){
+  if(!uploadedRows.length||isBulkRunning)return;
+  isBulkRunning=true;
+  const runBtn=document.getElementById('bulk-run-btn');
+  runBtn.disabled=true;runBtn.textContent='Fetching…';
+  document.getElementById('progress-bar-wrap').style.display='block';
+  bulkResults=[];
+  const uniqueKeys=[...new Set(uploadedRows.map(r=>r.university+'||'+r.program+'||'+r.level))];
+  const cache={};let done=0;
+  for(const key of uniqueKeys){
+    const [uni,prog,level]=key.split('||');
+    uploadedRows.forEach((row,i)=>{if(row.university===uni&&row.program===prog&&row.level===level){row.status='fetching';const el=document.getElementById('status-'+i);if(el){el.className='status-badge status-fetching';el.textContent='fetching'}}});
+    document.getElementById('bulk-progress-info').textContent=`Fetching ${done+1} of ${uniqueKeys.length}: ${uni}${prog?' / '+prog:''}`;
+    try{const r=await callAI_bulk(uni,prog,level);cache[key]=r}catch(e){cache[key]={data_found:false,reason:e.message,university_name:uni}}
+    done++;
+    document.getElementById('progress-bar-fill').style.width=Math.round(done/uniqueKeys.length*100)+'%';
+    const st=cache[key].data_found?'done':'error';
+    uploadedRows.forEach((row,i)=>{if(row.university===uni&&row.program===prog&&row.level===level){row.status=st;const el=document.getElementById('status-'+i);if(el){el.className='status-badge status-'+st;el.textContent=st}}});
+    await new Promise(r=>setTimeout(r,400));
+  }
+  uploadedRows.forEach(row=>{bulkResults.push({...row,result:cache[row.university+'||'+row.program+'||'+row.level]||{data_found:false,reason:'Not fetched'}})});
+  renderResultsTable();
+  document.getElementById('results-section').style.display='block';
+  document.getElementById('bulk-progress-info').textContent=`Done — ${done} unique queries processed.`;
+  isBulkRunning=false;runBtn.disabled=false;runBtn.textContent='Re-fetch All';
+}
+function renderResultsTable(){
+  const tbody=document.getElementById('results-tbody');tbody.innerHTML='';
+  bulkResults.forEach(row=>{
+    const r=row.result;const found=r&&r.data_found;
+    const srcUrl=found&&r.sources&&r.sources[0]?r.sources[0].url:'';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${row.university}</td><td>${row.program||'—'}</td><td>${row.level||'—'}</td><td>${found?(r.academic_year||'—'):'—'}</td><td class="in-state-val">${found?(fmt(r.in_state_tuition)||'—'):'—'}</td><td class="out-state-val">${found?(fmt(r.out_of_state_tuition)||'—'):'—'}</td><td>${found?(fmt(r.fees)||'—'):'—'}</td><td style="font-weight:500;color:var(--kap-blue-deep)">${found&&r.total_credits_required?Math.round(r.total_credits_required)+' cr':'—'}</td><td><span class="status-badge ${found?'status-done':'status-error'}">${found?'found':'not found'}</span></td><td>${srcUrl?`<a href="${srcUrl}" target="_blank" rel="noopener" style="color:var(--kap-purple);font-size:11px;word-break:break-all">${srcUrl}</a>`:'—'}</td><td style="font-size:11px;color:var(--kap-mid);max-width:180px;white-space:normal">${found?(r.notes||'—'):(r.reason||'—')}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+function downloadResultsXLSX(){
+  if(!bulkResults.length)return;
+  const headerRow=['University Name','Program Name','Program Level','Academic Year','In-State Tuition (USD)','Out-of-State Tuition (USD)','Fees (USD)','Room & Board (USD)','Total Credits Required','Tuition Type','Data Status','Confidence (%)','Notes','Source URL 1','Source URL 2'];
+  const rows=bulkResults.map(row=>{const r=row.result;const found=r&&r.data_found;return[row.university,row.program||'',row.level||'',found?(r.academic_year||''):'',found?(r.in_state_tuition||''):'',found?(r.out_of_state_tuition||''):'',found?(r.fees||''):'',found?(r.room_board||''):'',found&&r.total_credits_required?Math.round(r.total_credits_required):'',found?(r.tuition_type||''):'',found?'Found':'Not Found',found?Math.round((r.confidence||0.8)*100):'',found?(r.notes||''):(r.reason||''),found&&r.sources&&r.sources[0]?r.sources[0].url:'',found&&r.sources&&r.sources[1]?r.sources[1].url:'']});
+  const ws=XLSX.utils.aoa_to_sheet([headerRow,...rows]);
+  ws['!cols']=[{wch:35},{wch:28},{wch:16},{wch:14},{wch:22},{wch:24},{wch:14},{wch:18},{wch:20},{wch:18},{wch:14},{wch:16},{wch:40},{wch:50},{wch:50}];
+  const range=XLSX.utils.decode_range(ws['!ref']);
+  for(let c=range.s.c;c<=range.e.c;c++){const cell=ws[XLSX.utils.encode_cell({r:0,c})];if(cell)cell.s={font:{bold:true,color:{rgb:'FFFFFF'}},fill:{patternType:'solid',fgColor:{rgb:'240F6E'}},alignment:{wrapText:true,vertical:'center'}}}
+  ws['!freeze']={xSplit:0,ySplit:1};
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Tuition Data');
+  const today=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  const metaWs=XLSX.utils.aoa_to_sheet([['HigherEd Tuition Looker — Data Export'],['Generated',today],['Source Policy','Data pulled exclusively from official university .edu websites'],['Disclaimer','Always verify tuition figures directly on official university websites before making financial decisions.']]);
+  metaWs['!cols']=[{wch:20},{wch:60}];
+  XLSX.utils.book_append_sheet(wb,metaWs,'Info');
+  XLSX.writeFile(wb,`highered_tuition_looker_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+</script>
+</body>
+</html>
